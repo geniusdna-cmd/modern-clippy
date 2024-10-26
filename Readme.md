@@ -2,7 +2,6 @@
 
 A modern, TypeScript implementation of the classic Microsoft Office Assistant (Clippy) for web applications. This lightweight library brings back the nostalgic office assistant with modern web technologies and improved functionality.
 
-![Clippy Screenshot](https://raw.githubusercontent.com/microsoft/Microsoft.Github.io/master/projects/clippy/assets/clippy.png)
 
 ## Features
 
