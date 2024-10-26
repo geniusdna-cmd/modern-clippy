@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Clippy Demo</title>
+    <link rel="stylesheet" href="./src/style.css">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border: none;
+            background: #0066cc;
+            color: white;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #0052a3;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="controls">
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2" id="waveBtn">Wave</button>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2" id="speakBtn">Speak</button>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2" id="moveBtn">Move Random</button>
+    </div>
+
+    <script type="module">
+        import { initClippy } from './src/index.ts';
+
+        let clippy;
+
+        async function init() {
+            try {
+                clippy = await initClippy();
+                
+                // Add event listeners
+                document.getElementById('waveBtn').addEventListener('click', () => {
+                    clippy.play('Wave');
+                });
+
+                document.getElementById('speakBtn').addEventListener('click', () => {
+                    const messages = [
+                        "Hi! Need help with something?",
+                        "It looks like you're writing code!",
+                        "Can I assist you today?",
+                        "Did you know you can make me wave?"
+                    ];
+                    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                    clippy.speak(randomMessage);
+                });
+
+                document.getElementById('moveBtn').addEventListener('click', () => {
+                    const maxX = window.innerWidth - 100;
+                    const maxY = window.innerHeight - 100;
+                    const randomX = Math.floor(Math.random() * maxX);
+                    const randomY = Math.floor(Math.random() * maxY);
+                    clippy.moveTo(randomX, randomY);
+                });
+
+            } catch (error) {
+                console.error('Failed to initialize Clippy:', error);
+                alert('Error loading Clippy! Check the console for details.');
+            }
+        }
+
+        // Initialize when the page loads
+        init();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (clippy) {
+                // Keep Clippy in view when window is resized
+                const maxX = window.innerWidth - 100;
+                const maxY = window.innerHeight - 100;
+                clippy.moveTo(
+                    Math.min(maxX, parseInt(clippy.container.style.right || '20')),
+                    Math.min(maxY, parseInt(clippy.container.style.bottom || '20'))
+                );
+            }
+        });
+    </script>
+</body>
+</html>

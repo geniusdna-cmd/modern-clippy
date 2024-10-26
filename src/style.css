@@ -1,0 +1,30 @@
+.clippy-agent {
+  position: fixed;
+  z-index: 1000;
+}
+
+.clippy-main {
+  position: relative;
+  background-repeat: no-repeat;
+}
+
+.clippy-bubble {
+  position: absolute;
+  background: white;
+  border: 1px solid black;
+  border-radius: 5px;
+  padding: 8px;
+  max-width: 200px;
+  top: -60px;
+  left: -100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 1001;
+}
+
+.clippy-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
