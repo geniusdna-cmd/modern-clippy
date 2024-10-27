@@ -1,6 +1,7 @@
 {
   "name": "modern-clippy",
   "version": "1.0.0",
+  "description": "A modern TypeScript implementation of the classic Microsoft Office Assistant (Clippy)",
   "type": "module",
   "files": ["dist"],
   "main": "./dist/modern-clippy.umd.cjs",
@@ -20,13 +21,33 @@
     "preview": "vite preview",
     "prepublishOnly": "npm run build"
   },
+  "keywords": [
+    "clippy",
+    "office-assistant",
+    "typescript",
+    "animation",
+    "ui",
+    "helper",
+    "nostalgic",
+    "microsoft-office"
+  ],
+  "author": "Dennis Zimmer dzimmer@codenotary.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vchaindz/modern-clippy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vchaindz/modern-clippy/issues"
+  },
+  "homepage": "https://github.com/vchaindz/modern-clippy/blob/main/Readme.md",
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "autoprefixer": "^10.4.17",
+    "@types/node": "^20.11.25",
+    "autoprefixer": "^10.4.18",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5.2.2",
-    "vite": "^5.0.0",
-    "vite-plugin-dts": "^3.7.0"
+    "typescript": "^5.3.3",
+    "vite": "^5.1.5",
+    "vite-plugin-dts": "^3.7.3"
   }
 }
