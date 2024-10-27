@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "A modern TypeScript implementation of the classic Microsoft Office Assistant (Clippy)",
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "./dist/modern-clippy.umd.cjs",
   "module": "./dist/modern-clippy.js",
   "types": "./dist/index.d.ts",
@@ -19,7 +21,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest -c vitest.config.ts",
+    "test:coverage": "vitest run --reporter verbose",
+    "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit"
   },
   "keywords": [
     "clippy",
@@ -31,7 +38,7 @@
     "nostalgic",
     "microsoft-office"
   ],
-  "author": "Dennis Zimmer dzimmer@codenotary.com",
+  "author": "Dennis Zimmer dennis@vchain.us",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -43,11 +50,19 @@
   "homepage": "https://github.com/vchaindz/modern-clippy/blob/main/Readme.md",
   "devDependencies": {
     "@types/node": "^20.11.25",
+    "@vitest/ui": "^1.3.1",
     "autoprefixer": "^10.4.18",
+    "happy-dom": "^13.3.8",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "^5.1.5",
-    "vite-plugin-dts": "^3.7.3"
+    "vite-plugin-dts": "^3.7.3",
+    "vitest": "^1.3.1"
+  },
+  "overrides": {
+    "string-width": "^4.2.3",
+    "strip-ansi": "^6.0.1",
+    "wrap-ansi": "^7.0.0"
   }
 }

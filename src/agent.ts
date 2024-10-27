@@ -146,8 +146,8 @@ export class ModernClippy {
   }
 
   public moveTo(x: number, y: number, duration = 1000) {
-    const startX = parseInt(this.container.style.right) || 0;
-    const startY = parseInt(this.container.style.bottom) || 0;
+    const startX = parseInt(this.container.style.right) || 20;  // Default if not set
+    const startY = parseInt(this.container.style.bottom) || 20; // Default if not set
     
     const animation = this.container.animate([
       { right: `${startX}px`, bottom: `${startY}px` },
@@ -162,5 +162,11 @@ export class ModernClippy {
       this.container.style.right = `${x}px`;
       this.container.style.bottom = `${y}px`;
     };
-  }
+
+    // For immediate positioning, update styles right away if duration is 0
+    if (duration === 0) {
+      this.container.style.right = `${x}px`;
+      this.container.style.bottom = `${y}px`;
+    }
+}
 }
