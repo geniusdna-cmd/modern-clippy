@@ -1,6 +1,6 @@
 {
   "name": "modern-clippy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A modern TypeScript implementation of the classic Microsoft Office Assistant (Clippy)",
   "type": "module",
   "files": [
