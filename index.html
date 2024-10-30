@@ -4,103 +4,303 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Clippy Demo</title>
-    <link rel="stylesheet" href="./src/style.css">
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-        }
-
         .controls {
             position: fixed;
             top: 20px;
             left: 20px;
             z-index: 1000;
             background: white;
-            padding: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 90vw;
+            width: 400px;
+        }
+
+        .demo-section {
+            margin: 20px;
+            padding: 20px;
+            background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-        button {
-            margin: 5px;
-            padding: 8px 16px;
+        .preset-message {
             cursor: pointer;
-            border: none;
-            background: #0066cc;
-            color: white;
-            border-radius: 4px;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
 
-        button:hover {
-            background: #0052a3;
+        .preset-message:hover {
+            background: #f3f4f6;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .gradient-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
         }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 min-h-screen gradient-bg">
     <div class="controls">
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2" id="waveBtn">Wave</button>
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2" id="speakBtn">Speak</button>
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2" id="moveBtn">Move Random</button>
+        <div class="mb-6">
+            <h2 class="text-xl font-bold mb-3">Animations</h2>
+            <div class="grid grid-cols-2 gap-2">
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" data-animation="Wave">Wave</button>
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" data-animation="Thinking">Think</button>
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" data-animation="Explain">Explain</button>
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" data-animation="GetAttention">Attention</button>
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" data-animation="Congratulate">Celebrate</button>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-xl font-bold mb-3">Speech</h2>
+            <div class="space-y-2">
+                <div class="preset-message p-2 rounded hover:bg-gray-100 cursor-pointer" 
+                     onclick="this.dataset.message && window.handlePresetMessage(this.dataset.message)" 
+                     data-message="Hi! Need help with something?">
+                    👋 Greeting
+                </div>
+                <div class="preset-message p-2 rounded hover:bg-gray-100 cursor-pointer" 
+                     onclick="this.dataset.message && window.handlePresetMessage(this.dataset.message)" 
+                     data-message="It looks like you're writing code! Need assistance?">
+                    💻 Code Helper
+                </div>
+                <div class="preset-message p-2 rounded hover:bg-gray-100 cursor-pointer" 
+                     onclick="this.dataset.message && window.handlePresetMessage(this.dataset.message)" 
+                     data-message="Did you know I can do multiple animations? Try them out!">
+                    ✨ Features
+                </div>
+                <div class="flex mt-2">
+                    <input type="text" id="customMessage" 
+                           class="flex-1 p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           placeholder="Type custom message...">
+                    <button id="sendCustomBtn" 
+                            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-r">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-xl font-bold mb-3">Movement</h2>
+            <div class="grid grid-cols-2 gap-2">
+                <button id="moveRandomBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                    Random Position
+                </button>
+                <button id="followMouseBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                    Follow Mouse
+                </button>
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-xl font-bold mb-3">Demo Sequences</h2>
+            <button id="demoSequenceBtn" class="w-full bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                Run Demo Sequence
+            </button>
+        </div>
     </div>
 
     <script type="module">
         import { initClippy } from './src/index.ts';
-
+    
         let clippy;
-
+        let isFollowingMouse = false;
+        let currentX = 0;
+        let currentY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        let animationFrameId = null;
+    
+        function smoothFollow() {
+            if (!isFollowingMouse) {
+                cancelAnimationFrame(animationFrameId);
+                return;
+            }
+    
+            // Smoothing factor (0 = no movement, 1 = instant movement)
+            const smoothing = 0.1;
+    
+            // Calculate the next position with easing
+            currentX += (targetX - currentX) * smoothing;
+            currentY += (targetY - currentY) * smoothing;
+    
+            // Move Clippy
+            clippy.moveTo(
+                Math.round(currentX), 
+                Math.round(currentY)
+            );
+    
+            // Continue the animation
+            animationFrameId = requestAnimationFrame(smoothFollow);
+        }
+    
+        function handleMouseMove(e) {
+            if (!isFollowingMouse) return;
+    
+            // Update target position (offset to center Clippy on cursor)
+            targetX = e.clientX - 50;
+            targetY = e.clientY - 50;
+    
+            // Start the smooth following if it's not already running
+            if (!animationFrameId) {
+                smoothFollow();
+            }
+        }
+    
         async function init() {
             try {
                 clippy = await initClippy();
-                
-                // Add event listeners
-                document.getElementById('waveBtn').addEventListener('click', () => {
-                    clippy.play('Wave');
-                });
-
-                document.getElementById('speakBtn').addEventListener('click', () => {
-                    const messages = [
-                        "Hi! Need help with something?",
-                        "It looks like you're writing code!",
-                        "Can I assist you today?",
-                        "Did you know you can make me wave?"
-                    ];
-                    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-                    clippy.speak(randomMessage);
-                });
-
-                document.getElementById('moveBtn').addEventListener('click', () => {
-                    const maxX = window.innerWidth - 100;
-                    const maxY = window.innerHeight - 100;
-                    const randomX = Math.floor(Math.random() * maxX);
-                    const randomY = Math.floor(Math.random() * maxY);
-                    clippy.moveTo(randomX, randomY);
-                });
-
+                // Set initial position for smooth following
+                const rect = clippy.container.getBoundingClientRect();
+                currentX = rect.left;
+                currentY = rect.top;
+                targetX = currentX;
+                targetY = currentY;
+                setupEventListeners();
+                welcomeSequence();
             } catch (error) {
                 console.error('Failed to initialize Clippy:', error);
                 alert('Error loading Clippy! Check the console for details.');
             }
         }
-
-        // Initialize when the page loads
-        init();
-
+    
+        function setupEventListeners() {
+            // Animation buttons
+            document.querySelectorAll('[data-animation]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const animation = e.target.dataset.animation;
+                    clippy.play(animation);
+                });
+            });
+    
+            // Preset messages
+            document.querySelectorAll('.preset-message').forEach(div => {
+                div.addEventListener('click', (e) => {
+                    const message = e.target.dataset.message;
+                    clippy.play('GetAttention');
+                    setTimeout(() => clippy.speak(message), 500);
+                });
+            });
+    
+            // Custom message
+            window.handlePresetMessage = (message) => {
+                clippy.play('GetAttention');
+                setTimeout(() => clippy.speak(message), 500);
+            };
+    
+            // Custom message handling
+            const customInput = document.getElementById('customMessage');
+            const sendButton = document.getElementById('sendCustomBtn');
+    
+            const sendCustomMessage = () => {
+                const message = customInput.value.trim();
+                if (message) {
+                    clippy.play('Explain');
+                    setTimeout(() => clippy.speak(message), 500);
+                    customInput.value = '';
+                }
+            };
+    
+            sendButton.addEventListener('click', sendCustomMessage);
+            customInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendCustomMessage();
+                }
+            });
+    
+            // Movement controls
+            document.getElementById('moveRandomBtn').addEventListener('click', () => {
+                const maxX = window.innerWidth - 100;
+                const maxY = window.innerHeight - 100;
+                const randomX = Math.floor(Math.random() * maxX);
+                const randomY = Math.floor(Math.random() * maxY);
+                clippy.moveTo(randomX, randomY);
+            });
+    
+            // Mouse following
+            document.getElementById('followMouseBtn').addEventListener('click', () => {
+                isFollowingMouse = !isFollowingMouse;
+                const btn = document.getElementById('followMouseBtn');
+                btn.textContent = isFollowingMouse ? 'Stop Following' : 'Follow Mouse';
+                btn.classList.toggle('bg-red-500');
+                btn.classList.toggle('bg-purple-500');
+    
+                if (isFollowingMouse) {
+                    // Initialize current position to Clippy's current position
+                    const rect = clippy.container.getBoundingClientRect();
+                    currentX = rect.left;
+                    currentY = rect.top;
+                    // Start following
+                    document.addEventListener('mousemove', handleMouseMove);
+                } else {
+                    // Stop following
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+            });
+    
+            // Demo sequence
+            document.getElementById('demoSequenceBtn').addEventListener('click', runDemoSequence);
+    
+            // Enter key for custom message
+            document.getElementById('customMessage').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('sendCustomMsg').click();
+                }
+            });
+        }
+    
+        async function welcomeSequence() {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            clippy.play('GetAttention');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            clippy.speak("Hi! I'm Clippy! Try out my new animations and features!");
+        }
+    
+        async function runDemoSequence() {
+            const sequence = [
+                { animation: 'Wave', message: "Hello! Let me show you what I can do!", delay: 1000 },
+                { animation: 'Thinking', message: "Hmm... what should I demonstrate first?", delay: 2000 },
+                { animation: 'GetAttention', message: "Oh! Did you know I can move around?", delay: 1500 },
+                { animation: 'Congratulate', message: "And I have many new animations!", delay: 1500 },
+                { animation: 'Explain', message: "Feel free to try them all out!", delay: 1000 }
+            ];
+    
+            for (const item of sequence) {
+                clippy.play(item.animation);
+                await new Promise(resolve => setTimeout(resolve, 500));
+                clippy.speak(item.message);
+                await new Promise(resolve => setTimeout(resolve, item.delay));
+            }
+        }
+    
         // Handle window resize
         window.addEventListener('resize', () => {
             if (clippy) {
-                // Keep Clippy in view when window is resized
                 const maxX = window.innerWidth - 100;
                 const maxY = window.innerHeight - 100;
                 clippy.moveTo(
-                    Math.min(maxX, parseInt(clippy.container.style.right || '20')),
-                    Math.min(maxY, parseInt(clippy.container.style.bottom || '20'))
+                    Math.min(maxX, parseInt(clippy.container.style.left || '20')),
+                    Math.min(maxY, parseInt(clippy.container.style.top || '20'))
                 );
             }
         });
+    
+        // Initialize when the page loads
+        init();
     </script>
 </body>
 </html>

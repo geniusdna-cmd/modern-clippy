@@ -145,8 +145,24 @@ clippy.hide(): void;                                 // Hide Clippy
 
 ### Available Animations
 
-- `Idle`: Default idle animation
-- `Wave`: Waving animation
+- `Idle`: Default idle position
+- `Wave`: Friendly greeting wave
+- `Thinking`: Shows Clippy in contemplation
+- `Explain`: Used when providing information
+- `GetAttention`: Animated gesture to draw attention
+- `Congratulate`: Celebration animation
+
+Each animation can be played using:
+```typescript
+
+// Example: Thinking animation with speech
+clippy.play('Thinking');
+clippy.speak("Hmm, let me think about that...");
+
+// Example: Getting attention before important message
+clippy.play('GetAttention');
+clippy.speak("Hey! Did you know you can use all these animations?");
+```
 
 ## Project Structure
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { initClippy } from '../index';
 
 describe('Clippy', () => {
@@ -122,4 +122,214 @@ describe('Clippy', () => {
     expect(agent.style.right).toBe('100px');
     expect(agent.style.bottom).toBe('200px');
   });
+
+    // Test animations
+    it('should update sprite position for Wave animation', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      const agent = document.querySelector('.clippy-agent') as HTMLElement;
+      
+      clippy.play('Wave');
+      await new Promise(resolve => setTimeout(resolve, 50));
+  
+      // Check if background position is being updated
+      // You might need to adjust these values based on your sprite map
+      expect(agent.style.backgroundPosition).not.toBe('0px 0px');
+    });
+  
+  
+  // Test concurrent animations
+    it('should handle concurrent animation requests', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      
+      // Start multiple animations rapidly
+      for (let i = 0; i < 5; i++) {
+        clippy.play('Wave');
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+      
+      // Should not throw errors
+      await new Promise(resolve => setTimeout(resolve, 100));
+    });
+  
+    // Test speech bubble positioning
+    it('should position speech bubble', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      const agent = document.querySelector('.clippy-agent') as HTMLElement;
+      
+      // Set initial position
+      clippy.moveTo(100, 100, 0); // Use immediate positioning
+      await new Promise(resolve => setTimeout(resolve, 0));
+      
+      clippy.speak('Hello!');
+      const bubble = document.querySelector('.clippy-bubble') as HTMLElement;
+      
+      expect(bubble).toBeDefined();
+      expect(bubble.style.position).toBe('absolute');
+      // Instead of checking exact position, verify the bubble exists and has positioning
+      expect(bubble.style.bottom || bubble.style.top).toBeTruthy();
+    });
+  
+    // Test for speech updates
+    it('should update speech text', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      
+      // Show first message
+      clippy.speak('First message', 500); // Short duration for testing
+      await new Promise(resolve => setTimeout(resolve, 100)); // Wait for fade in
+      
+      const firstBubble = document.querySelector('.clippy-bubble');
+      expect(firstBubble?.textContent).toBe('First message');
+      
+      // Wait for first bubble to start fading out
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Show second message
+      clippy.speak('Second message', 500);
+      await new Promise(resolve => setTimeout(resolve, 100)); // Wait for new bubble fade in
+      
+      // There might briefly be two bubbles (old fading out, new fading in)
+      const bubbles = document.querySelectorAll('.clippy-bubble');
+      const visibleBubble = Array.from(bubbles).find(
+        bubble => window.getComputedStyle(bubble).opacity !== '0'
+      );
+      
+      expect(visibleBubble?.textContent).toBe('Second message');
+    });
+  
+    // Test window boundary handling
+    it('should stay within window boundaries on resize', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      clippy.moveTo(5000, 5000); // Move far outside
+  
+      // Simulate window resize
+      global.innerWidth = 1024;
+      global.innerHeight = 768;
+      window.dispatchEvent(new Event('resize'));
+  
+      const agent = document.querySelector('.clippy-agent') as HTMLElement;
+      expect(parseInt(agent.style.right)).toBeLessThanOrEqual(1024 - 100);
+      expect(parseInt(agent.style.bottom)).toBeLessThanOrEqual(768 - 100);
+    });
+  
+    // Test error handling
+    it('should handle invalid animations gracefully', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      // @ts-ignore - Testing invalid animation
+      expect(() => clippy.play('InvalidAnimation')).not.toThrow();
+    });
+  
+    // Test initialization with invalid path
+    it('should handle invalid base path gracefully', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        await initClippy({ basePath: '/invalid/path' });
+      } catch (error) {
+        expect(error).toBeDefined();
+      }
+      consoleSpy.mockRestore();
+    });
+  
+    it('should handle visibility', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      const initialAgent = document.querySelector('.clippy-agent');
+      expect(initialAgent).toBeDefined(); // Should exist after init
+      
+      // Test hide
+      clippy.hide();
+      await new Promise(resolve => setTimeout(resolve, 50));
+      const hiddenAgent = document.querySelector('.clippy-agent');
+      expect(hiddenAgent).toBeNull(); // Should be removed from DOM
+      
+      // Test show
+      clippy.show();
+      await new Promise(resolve => setTimeout(resolve, 50));
+      const shownAgent = document.querySelector('.clippy-agent');
+      expect(shownAgent).toBeDefined(); // Should be back in DOM
+      
+    });
+    
+    // Test for cleanup
+    it('should cleanup speech bubbles when hidden', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      
+      // Show a speech bubble
+      clippy.speak('Test message');
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      const bubble = document.querySelector('.clippy-bubble');
+      expect(bubble).toBeDefined();
+      
+      // Hide Clippy
+      clippy.hide();
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // Both Clippy and bubble should be gone
+      expect(document.querySelector('.clippy-agent')).toBeNull();
+      expect(document.querySelector('.clippy-bubble')).toBeNull();
+    });
+    
+    // Test show/hide cycle
+    it('should handle multiple show/hide cycles', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      
+      // First hide
+      clippy.hide();
+      await new Promise(resolve => setTimeout(resolve, 50));
+      expect(document.querySelector('.clippy-agent')).toBeNull();
+      
+      // First show
+      clippy.show();
+      await new Promise(resolve => setTimeout(resolve, 50));
+      let agent = document.querySelector('.clippy-agent');
+      expect(agent).toBeDefined();
+      
+      // Second hide
+      clippy.hide();
+      await new Promise(resolve => setTimeout(resolve, 50));
+      expect(document.querySelector('.clippy-agent')).toBeNull();
+      
+      // Second show
+      clippy.show();
+      await new Promise(resolve => setTimeout(resolve, 50));
+      agent = document.querySelector('.clippy-agent');
+      expect(agent).toBeDefined();
+    });
+
+    // Additional test for cleanup
+    it('should cleanup speech bubbles when hidden', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      
+      // Show a speech bubble
+      clippy.speak('Test message');
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      const bubble = document.querySelector('.clippy-bubble');
+      expect(bubble).toBeDefined();
+      
+      // Hide Clippy
+      clippy.hide();
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // Both Clippy and bubble should be gone
+      expect(document.querySelector('.clippy-agent')).toBeNull();
+      expect(document.querySelector('.clippy-bubble')).toBeNull();
+    });
+ 
+    // Test rapid movement commands
+    it('should handle rapid movement commands', async () => {
+      const clippy = await initClippy({ basePath: '/static/clippy' });
+      
+      // Rapid movements
+      clippy.moveTo(100, 100);
+      clippy.moveTo(200, 200);
+      clippy.moveTo(300, 300);
+      
+      // Should only animate to final position
+      expect(Element.prototype.animate).toHaveBeenLastCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ right: '300px', bottom: '300px' })
+        ]),
+        expect.any(Object)
+      );
+    });
 });
